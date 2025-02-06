@@ -1,3 +1,18 @@
+
 # Spalk Tech Test
 
 This repo contains sample files and outputs for the Spalk tech test
+
+The source is written in TypeScript, using `node v20.15.1`, & `npm 10.7.0`
+
+### Installation
+`npm install`
+
+#### Run test_seccess
+`cat test_success.ts | npm run start`
+
+#### Run test_failure
+`cat test_failure.ts | npm run start`
+
+### Run unit tests
+`npm run test`
