@@ -1,19 +1,35 @@
 const SYNC_BYTE = 71 //  0x47
 
+// cache as we process the stream
+let _isFirst: boolean; // keep track of first packet - may not have "sync byte"
+let _remainderChunks: number[]; // cahce for unprocessed buffer chunks
+let _packetIDs: Set<number> // chace for packet IDs
+let _packetCount: number; // TODO: determin if output is zero indexed or not
+
+/**
+ * 
+ * @param stream 
+ * @param bytesInPacket 
+ * @returns Promise
+ * 
+ * generic module for obtaining packet Ids for a MPEG readableStream
+ */
 export default function processMpegIDs(
   stream: NodeJS.ReadableStream, 
   bytesInPacket: number
 ): Promise<number[]> {
   return new Promise<number[]>((resolve, reject) => {
+    // initialise processing cache
+    _isFirst = true
+    _remainderChunks = [];
+    _packetIDs =  new Set<number>();
+    _packetCount = 0;
+
+  // handele stream events
     stream.on('data', processPacketsInData(bytesInPacket, reject));
     stream.on('end', preocessEnd(resolve))
   });
 }
-
-let _isFirst = true; // keep track of first packet - may not have "sync byte"
-let _remainderChunks: number[] = []; // cahce for unprocessed buffer chunks
-const _packetIDs = new Set<number>(); // chace for packet IDs
-let _packetCount = 0;
 
 function processPacketsInData(
   bytesInPacket: number,
@@ -37,10 +53,10 @@ function processPacketsInData(
       const packet = chunkArr.slice(startIndex, endIndex);
 
       const id = getPacketId(packet, bytesInPacket, _isFirst, reject);
-      if (id) _packetIDs.add(id);
-      if (_isFirst) _isFirst = false;
+      if (id) _packetIDs.add(id)
+        _packetCount++;
 
-      _packetCount++;
+      if (_isFirst) _isFirst = false;
     }
 
     // any left over bytes set to remainerCache for next buffer chunk
