@@ -6,6 +6,6 @@ processMpegStream(stream, 188).then(results => {
   results.forEach(id => console.log(`0x${id.toString(16)}`));
   process.exit(0)
 }).catch(err => {
-  console.error(err);
+  console.log(`${err}`);
   process.exit(1)
 })

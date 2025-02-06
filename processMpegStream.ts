@@ -1,3 +1,5 @@
+const SYNC_BYTE = 71 //  0x47
+
 export default function processMpegIDs(
   stream: NodeJS.ReadableStream, 
   bytesInPacket: number
@@ -11,6 +13,7 @@ export default function processMpegIDs(
 let _isFirst = true; // keep track of first packet - may not have "sync byte"
 let _remainderChunks: number[] = []; // cahce for unprocessed buffer chunks
 const _packetIDs = new Set<number>(); // chace for packet IDs
+let _packetCount = 0;
 
 function processPacketsInData(
   bytesInPacket: number,
@@ -26,10 +29,6 @@ function processPacketsInData(
      return;
     }
 
-    if (_isFirst) console.log(`chunk is ${numOfBytes} bytes`)
-    
-    _isFirst = false;
-
     const numOfPackets = Math.floor(numOfBytes / bytesInPacket);
 
     for (let i=0; i < numOfPackets; i++) {
@@ -37,8 +36,11 @@ function processPacketsInData(
       const endIndex = startIndex + bytesInPacket - 1;
       const packet = chunkArr.slice(startIndex, endIndex);
 
-      const id = getPacketId(packet, reject);
-      _packetIDs.add(id);
+      const id = getPacketId(packet, bytesInPacket, _isFirst, reject);
+      if (id) _packetIDs.add(id);
+      if (_isFirst) _isFirst = false;
+
+      _packetCount++;
     }
 
     // any left over bytes set to remainerCache for next buffer chunk
@@ -54,9 +56,25 @@ function preocessEnd(resolve: (value: number[] | PromiseLike<number[]>) => void)
   }
 }
 
-function getPacketId(packet: number[], reject: (reason?: any) => void): number {
-  const id1 = packet[1].toString(2).padStart(8, '0').substring(8 - 5)
-  const id2 = packet[2].toString(2).padStart(8, '0')
+function getPacketId(packet: number[], packetSize: number, isFirst: boolean, reject: (reason?: any) => void): number | void {
+  let isFirstWithoutSyncByte = false;
+
+  const hasSyncByte = packet[0] === SYNC_BYTE;
+
+  if (isFirst && !hasSyncByte) {
+    isFirstWithoutSyncByte =  true;
+  }
+  if (!isFirst && !hasSyncByte) {
+    return reject(new Error(`No sync byte present in packet ${_packetCount}, offset ${_packetCount * packetSize}`))
+  }
+
+  /**
+   * TODO: confirm assumption
+   * 
+   * if First and has no syncByte then id is first & second bytes
+   */
+  const id1 = packet[isFirstWithoutSyncByte ? 0 : 1].toString(2).padStart(8, '0').substring(8 - 5)
+  const id2 = packet[isFirstWithoutSyncByte ? 1: 2].toString(2).padStart(8, '0')
   
   const id = parseInt(`${id1}${id2}`, 2);
 
