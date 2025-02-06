@@ -16,7 +16,7 @@ describe('testing test_sucess.ts example file', () => {
     const stream = fs.createReadStream(path.resolve(__dirname, '../test_success.ts'));
     const results = await processMpegStream(stream, 188);
 
-    expect(results.map(id => `0x${id.toString(16)}`)).toEqual(SUCCESS_IDs)
+    expect(results).toEqual(SUCCESS_IDs)
   }, 20 * 1000);
 });
 

@@ -3,7 +3,7 @@ const SYNC_BYTE = 71 //  0x47
 // cache as we process the stream
 let _isFirst: boolean; // keep track of first packet - may not have "sync byte"
 let _remainderChunks: number[]; // cahce for unprocessed buffer chunks
-let _packetIDs: Set<number> // chace for packet IDs
+let _packetIDs: Set<string> // chace for packet IDs
 let _packetCount: number; // TODO: determin if output is zero indexed or not
 
 /**
@@ -17,12 +17,12 @@ let _packetCount: number; // TODO: determin if output is zero indexed or not
 export default function processMpegIDs(
   stream: NodeJS.ReadableStream, 
   bytesInPacket: number
-): Promise<number[]> {
-  return new Promise<number[]>((resolve, reject) => {
+): Promise<string[]> {
+  return new Promise<string[]>((resolve, reject) => {
     // initialise processing cache
     _isFirst = true
     _remainderChunks = [];
-    _packetIDs =  new Set<number>();
+    _packetIDs =  new Set<string>();
     _packetCount = 0;
 
   // handele stream events
@@ -53,8 +53,8 @@ function processPacketsInData(
       const packet = chunkArr.slice(startIndex, endIndex);
 
       const id = getPacketId(packet, bytesInPacket, _isFirst, reject);
-      if (id) _packetIDs.add(id)
-        _packetCount++;
+      if (id) _packetIDs.add(id);
+      _packetCount++;
 
       if (_isFirst) _isFirst = false;
     }
@@ -65,14 +65,14 @@ function processPacketsInData(
   }
 }
 
-function preocessEnd(resolve: (value: number[] | PromiseLike<number[]>) => void): () => void {
+function preocessEnd(resolve: (value: string[] | PromiseLike<string[]>) => void): () => void {
   return () => {
-    const values: number[] = Array.from(_packetIDs).sort((a, b ) => a-b).slice(0,20);
+    const values: string[] = Array.from(_packetIDs).sort((a, b ) => parseInt(a, 16) - parseInt(b, 16)).slice(0,20);
     resolve(values);
   }
 }
 
-function getPacketId(packet: number[], packetSize: number, isFirst: boolean, reject: (reason?: any) => void): number | void {
+function getPacketId(packet: number[], packetSize: number, isFirst: boolean, reject: (reason?: any) => void): string | void {
   let isFirstWithoutSyncByte = false;
 
   const hasSyncByte = packet[0] === SYNC_BYTE;
@@ -94,5 +94,5 @@ function getPacketId(packet: number[], packetSize: number, isFirst: boolean, rej
   
   const id = parseInt(`${id1}${id2}`, 2);
 
-  return id;
+  return `0x${id.toString(16)}`;
 }
