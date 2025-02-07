@@ -67,7 +67,7 @@ function processPacketsInData(
 
 function preocessEnd(resolve: (value: string[] | PromiseLike<string[]>) => void): () => void {
   return () => {
-    const values: string[] = Array.from(_packetIDs).sort((a, b ) => parseInt(a, 16) - parseInt(b, 16)).slice(0,20);
+    const values: string[] = Array.from(_packetIDs).sort((a, b ) => parseInt(a, 16) - parseInt(b, 16))
     resolve(values);
   }
 }
