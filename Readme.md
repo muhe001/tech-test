@@ -6,7 +6,7 @@ This repo contains sample files and outputs for the Spalk tech test
 The source is written in TypeScript, using `node v20.15.1`, & `npm 10.7.0`
 
 ### Current Issues
-`test_failure` is returning `packet 20884` instead of `packet 20535` *(see failure log at bottom of reame for details)*
+`test_failure` is returning `packet 20884` instead of `packet 20535` *(see failure log at bottom of readme for details)*
 
 #### Installation
 `npm install`
