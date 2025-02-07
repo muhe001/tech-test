@@ -2,8 +2,8 @@ const SYNC_BYTE = 71 //  0x47
 
 // cache as we process the stream
 let _isFirst: boolean; // keep track of first packet - may not have "sync byte"
-let _remainderChunks: number[]; // cahce for unprocessed buffer chunks
-let _packetIDs: Set<string> // chace for packet IDs
+let _remainderChunks: number[]; // cache for unprocessed buffer chunks
+let _packetIDs: Set<string> // cache for packet IDs
 let _packetCount: number; // TODO: determin if output is zero indexed or not
 
 /**
